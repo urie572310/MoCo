@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>我的網頁></title>
+   </head>
+   <script>
+     let friends = [];
+     
+     let friend1 = {
+  name: "小明",
+  age: 25,
+  hobbies: ["打籃球", "看電影", "旅遊"],
+  contact: {
+    phone: "0912-345-678",
+    email: "xiaoming@example.com"
+  }
+};
+
+let friend2 = {
+  name: "小華",
+  age: 27,
+  hobbies: ["閱讀", "彈吉他"],
+  contact: {
+    phone: "0987-654-321",
+    email: "xiaohua@example.com"
+  }
+};
+
+let friend3 = {
+  name: "小美",
+  age: 24,
+  hobbies: ["畫畫", "烹飪", "唱歌"],
+  contact: {
+    phone: "0900-111-222",
+    email: "xiaomei@example.com"
+  }
+};
+
+friends.push(friend1, friend2, friend3);
+
+console.log("第二個朋友的名字：", friends[1].name);
+console.log("第一個朋友的第三個興趣：", friends[0].hobbies[2]);
+console.log("第三個朋友的 Email：", friends[2].contact.email);
+friends[1].hobbies.push("游泳");
+console.log("第二個朋友更新後的興趣：", friends[1].hobbies);
+</script>
+</html>
