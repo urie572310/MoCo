@@ -3,53 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Device Geolocation</title>
+    <title>即時位置顯示</title>
+    <style>
+        body { font-family: Arial; line-height: 1.6; padding: 20px; }
+        .box { padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
+    </style>
 </head>
 <body>
-    <h2>取得目前位置</h2>
-    <button id="getLocationBtn">取得定位資料</button>
 
-    <script>
-        const btn = document.getElementById("getLocationBtn");
+    <h2>📍 即時位置</h2>
+    <button id="startBtn">開始取得位置</button>
 
-        btn.addEventListener("click", () => {
-            // 1️⃣ 檢查瀏覽器支援
-            if (!navigator.geolocation) {
-                console.log("❌ 你的瀏覽器不支援 Geolocation API");
-                return;
-            }
+    <div class="box">
+        <p>緯度：<span id="lat">-</span></p>
+        <p>經度：<span id="lon">-</span></p>
+        <p>海拔：<span id="alt">-</span></p>
+    </div>
 
-            // 2️⃣ 請求權限（部分瀏覽器需要 HTTPS）
-            navigator.permissions.query({ name: "geolocation" }).then((result) => {
-                console.log("🔍 目前權限狀態：", result.state);
+<script>
+    // iOS 的感測器權限（非必須，但避免錯誤）
+    async function requestIOSPermission() {
+        if (typeof DeviceMotionEvent?.requestPermission === "function") {
+            await DeviceMotionEvent.requestPermission().catch(()=>{});
+        }
+        if (typeof DeviceOrientationEvent?.requestPermission === "function") {
+            await DeviceOrientationEvent.requestPermission().catch(()=>{});
+        }
+    }
 
-                if (result.state === "denied") {
-                    console.log("❌ 使用者封鎖了定位權限");
-                    return;
+    // 即時 GPS 位置 watchPosition()
+    function startGPSWatch() {
+        if (!navigator.geolocation) {
+            console.log("❌ 此瀏覽器不支援定位");
+            return;
+        }
+
+        navigator.geolocation.watchPosition(
+            (pos) => {
+                const c = pos.coords;
+
+                document.getElementById("lat").textContent = c.latitude.toFixed(6);
+                document.getElementById("lon").textContent = c.longitude.toFixed(6);
+
+                if (c.altitude !== null) {
+                    document.getElementById("alt").textContent = c.altitude.toFixed(2) + " m";
+                } else {
+                    document.getElementById("alt").textContent = "無法取得";
                 }
 
-                // 3️⃣ 取得位置
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const lat = position.coords.latitude;
-                        const lon = position.coords.longitude;
-                        const alt = position.coords.altitude;  // 有些設備會回傳 null
+                console.log("📍 緯度:", c.latitude);
+                console.log("📍 經度:", c.longitude);
+                console.log("⛰️ 海拔:", c.altitude);
+            },
+            (err) => {
+                console.log("❌ 位置取得失敗:", err.message);
+            },
+            { enableHighAccuracy: true }
+        );
+    }
 
-                        console.log("📍 緯度：", lat);
-                        console.log("📍 經度：", lon);
-                        console.log("⛰️ 海拔（可能為 null）：", alt);
-                    },
-                    (error) => {
-                        console.log("❌ 取得位置失敗：", error.message);
-                    },
-                    {
-                        enableHighAccuracy: true, // 盡量提高精準度
-                        timeout: 5000,
-                        maximumAge: 0
-                    }
-                );
-            });
-        });
-    </script>
+    document.getElementById("startBtn").addEventListener("click", async () => {
+        await requestIOSPermission();
+        startGPSWatch();
+        console.log("📡 開始即時取得位置");
+    });
+</script>
+
 </body>
 </html>
