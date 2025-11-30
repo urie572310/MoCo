@@ -13,7 +13,8 @@
 
 <h2>行動裝置感測器測試</h2>
 
-<button id="btn">啟動感測器</button>
+<button id="btnStart">啟動感測器</button>
+<button id="btnStop" disabled>停止感測器</button>
 
 <h3>DeviceOrientation (方向感測器)</h3>
 Alpha：<span id="alphaVal" class="val">-</span><br>
@@ -30,25 +31,42 @@ Gamma：<span id="gammaVal" class="val">-</span><br>
 旋轉 γ：<span id="rotC" class="val">-</span><br>
 
 <script>
-const btn = document.getElementById("btn");
+const btnStart = document.getElementById("btnStart");
+const btnStop = document.getElementById("btnStop");
 
-// 顯示元素
+
 const alphaVal = document.getElementById("alphaVal");
 const betaVal = document.getElementById("betaVal");
 const gammaVal = document.getElementById("gammaVal");
-
 const accX = document.getElementById("accX");
 const accY = document.getElementById("accY");
 const accZ = document.getElementById("accZ");
-
 const rotA = document.getElementById("rotA");
 const rotB = document.getElementById("rotB");
 const rotC = document.getElementById("rotC");
 
-// 啟動感測器（iOS 需使用按鈕觸發）
-btn.addEventListener("click", async () => {
+let orientationHandler = null;
+let motionHandler = null;
+
+
+function clearValues() {
+    alphaVal.textContent = "-";
+    betaVal.textContent = "-";
+    gammaVal.textContent = "-";
+
+    accX.textContent = "-";
+    accY.textContent = "-";
+    accZ.textContent = "-";
+
+    rotA.textContent = "-";
+    rotB.textContent = "-";
+    rotC.textContent = "-";
+}
+
+
+btnStart.addEventListener("click", async () => {
     try {
-        // iOS 13+ 權限要求
+        /
         if (typeof DeviceMotionEvent.requestPermission === "function") {
             const permission = await DeviceMotionEvent.requestPermission();
             if (permission !== "granted") {
@@ -57,10 +75,8 @@ btn.addEventListener("click", async () => {
             }
         }
 
-        // --------------------
-        // DeviceOrientation
-        // --------------------
-        window.addEventListener("deviceorientation", (event) => {
+        
+        orientationHandler = (event) => {
             const a = event.alpha;
             const b = event.beta;
             const g = event.gamma;
@@ -68,31 +84,49 @@ btn.addEventListener("click", async () => {
             alphaVal.textContent = a ? a.toFixed(2) : "-";
             betaVal.textContent = b ? b.toFixed(2) : "-";
             gammaVal.textContent = g ? g.toFixed(2) : "-";
-        });
+        };
 
-        // --------------------
-        // DeviceMotion
-        // --------------------
-        window.addEventListener("devicemotion", (event) => {
-            // 加速度
+        motionHandler = (event) => {
             const acc = event.acceleration;
             accX.textContent = acc?.x ? acc.x.toFixed(2) : "-";
             accY.textContent = acc?.y ? acc.y.toFixed(2) : "-";
             accZ.textContent = acc?.z ? acc.z.toFixed(2) : "-";
 
-            // 旋轉速度
             const r = event.rotationRate;
             rotA.textContent = r?.alpha ? r.alpha.toFixed(2) : "-";
             rotB.textContent = r?.beta ? r.beta.toFixed(2) : "-";
             rotC.textContent = r?.gamma ? r.gamma.toFixed(2) : "-";
-        });
+        };
 
-        btn.disabled = true;
-        btn.textContent = "已啟動感測器";
+
+        window.addEventListener("deviceorientation", orientationHandler);
+        window.addEventListener("devicemotion", motionHandler);
+
+    
+        btnStart.disabled = true;
+        btnStop.disabled = false;
+        btnStart.textContent = "感測器已啟動";
 
     } catch (err) {
         alert("啟動感測器時發生錯誤：" + err);
     }
+});
+
+
+btnStop.addEventListener("click", () => {
+    if (orientationHandler) {
+        window.removeEventListener("deviceorientation", orientationHandler);
+    }
+    if (motionHandler) {
+        window.removeEventListener("devicemotion", motionHandler);
+    }
+
+    clearValues();
+
+
+    btnStart.disabled = false;
+    btnStop.disabled = true;
+    btnStart.textContent = "啟動感測器";
 });
 </script>
 
