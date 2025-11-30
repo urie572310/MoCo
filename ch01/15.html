@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>裝置感測器定位測試</title>
+</head>
+<body>
+    <h2>取得目前位置</h2>
+    <button id="getLocationBtn">取得位置</button>
+
+    <script>
+        function checkSupport() {
+            if (!("geolocation" in navigator)) {
+                console.log("❌ 此瀏覽器不支援 Geolocation API");
+                return false;
+            }
+            console.log("✔ 此瀏覽器支援 Geolocation");
+            return true;
+        }
+
+        // 請求位置權限（Android Chrome / iOS Safari）
+        async function requestPermission() {
+            if (!navigator.permissions) {
+                console.log("⚠ 無法使用 Permissions API，可能是 iOS Safari，改用 geolocation 請求權限");
+                return "prompt";
+            }
+
+            try {
+                const result = await navigator.permissions.query({ name: "geolocation" });
+                console.log("📌 目前定位權限狀態：", result.state);
+                return result.state;
+            } catch (e) {
+                console.log("⚠ Permissions API 查詢失敗：", e);
+                return "prompt";
+            }
+        }
+
+      
+        function getCurrentLocation() {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    const alt = pos.coords.altitude;  // 海拔可能為 null（取決於裝置）
+
+                    console.log("📍 緯度:", lat);
+                    console.log("📍 經度:", lon);
+                    console.log("⛰️ 海拔:", alt !== null ? alt + " m" : "無法取得海拔");
+
+                },
+                (err) => {
+                    console.log("❌ 無法取得位置：", err.message);
+                },
+                {
+                    enableHighAccuracy: true, 
+                    timeout: 5000,
+                    maximumAge: 0
+                }
+            );
+        }
+
+        document.getElementById("getLocationBtn").addEventListener("click", async () => {
+
+            if (!checkSupport()) return;
+
+            const perm = await requestPermission();
+
+            
+            if (perm === "granted" || perm === "prompt") {
+                getCurrentLocation();
+            } else {
+                console.log("❌ 位置權限被拒絕，無法取得");
+            }
+        });
+    </script>
+</body>
+</html>
