@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Fetch</title>
+   </head>
+<body>
+    <h1>Fetch Demo</h1>
+    <div class="json-output">
+        <h3>JSON 資料格式</h3>
+        <pre id="jsonOutput"></pre>
+    </div>
+
+     <script>
+        async function f_test(){
+         //let url = 'https://api.github.com/repos/javascript-tutorial/en.javascript.info/commits';
+         let url = 'https://api.github.com/repos/urie572310/MoCo/commits';
+         let response = await fetch(url);
+
+         let commits = await response.json();//read response body and parse as JSON
+
+         //alert(commits[0].author.login);
+         const jasonOutput = document.getElementById('jsonOutput');
+         jsonOutput.textContent = JSON.stringify(commits[0]);
+
+        }
+        f_test()
+    </script>
+</body>
+</html>
