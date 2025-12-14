@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Fetch POST</title>
+   </head>
+<body>
+    <h1>Form Data</h1>
+    <div class="json-output">
+        <form id="formElem">
+            <input type="text" name="name" value="John">
+            <input type="text" name="surname" value="Smith">
+            <input type="submit">
+        </form>
+        <pre id="jsonOutput"></pre>    
+    </div>
+
+     <script>
+        async function f_test(){
+              formElem.onsubmit = async (e) => {
+                e.preventDefault();
+
+                let response = await fetch('https://httpcan.org/post',{
+                method:'POST',
+                body: new FormData(formElem)
+                });
+
+                let result = await response.json();
+
+                console.log(result);
+              };
+        }
+        f_test()
+    </script>
+</body>
+</html>
