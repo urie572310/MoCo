@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>麥克風與攝影機啟用</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            text-align: center;
+            padding: 30px;
+        }
+        video {
+            width: 480px;
+            border-radius: 10px;
+            background: black;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #status {
+            margin-top: 15px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🎤 麥克風 & 📷 攝影鏡頭測試</h1>
+
+    <video id="video" autoplay playsinline></video>
+
+    <div>
+        <button onclick="startMedia()">啟用麥克風與攝影機</button>
+        <button onclick="stopMedia()">停止</button>
+    </div>
+
+    <div id="status">狀態：尚未啟用</div>
+
+    <script>
+        let stream = null;
+
+        async function startMedia() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: true
+                });
+
+                const video = document.getElementById("video");
+                video.srcObject = stream;
+
+                document.getElementById("status").innerText =
+                    "狀態：麥克風與攝影機已啟用 ✅";
+
+                console.log("Media stream:", stream);
+            } catch (error) {
+                console.error("啟用失敗：", error);
+                document.getElementById("status").innerText =
+                    "狀態：啟用失敗 ❌（請檢查權限）";
+            }
+        }
+
+        function stopMedia() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+                document.getElementById("video").srcObject = null;
+                document.getElementById("status").innerText =
+                    "狀態：已停止";
+            }
+        }
+    </script>
+
+</body>
+</html>
