@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>行動即時通訊狀態模擬系統</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f2f2f2;
+        }
+        #status {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #fff;
+            border-radius: 5px;
+        }
+        #chatbox {
+            height: 300px;
+            overflow-y: auto;
+            background: #fff;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .me {
+            text-align: right;
+            margin: 5px 0;
+        }
+        .me span {
+            background: #a7d6ff;
+            padding: 6px 10px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        .bot span {
+            background: #ddd;
+            padding: 6px 10px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        input {
+            width: 70%;
+            padding: 6px;
+        }
+        button {
+            padding: 6px 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>📱 行動即時通訊狀態模擬系統</h2>
+
+<!-- 行動裝置狀態顯示 -->
+<div id="status">
+    📡 行動狀態：<span id="motionStatus">未偵測</span>
+</div>
+
+<!-- 聊天視窗 -->
+<div id="chatbox"></div>
+
+<br>
+<input type="text" id="msgInput" placeholder="輸入訊息">
+<button onclick="sendMessage()">送出</button>
+
+<script>
+/* ===============================
+   ch01 JavaScript 基礎
+   =============================== */
+
+// 聊天紀錄（陣列）
+let chatHistory = [];
+
+// 行動狀態
+let isMoving = false;
+
+/* ===============================
+   行動裝置感測器（行動）
+   =============================== */
+if (window.DeviceMotionEvent) {
+    window.addEventListener("devicemotion", function (event) {
+        let acc = event.accelerationIncludingGravity;
+
+        // 判斷手機是否在移動（簡單判斷）
+        if (Math.abs(acc.x) > 2 || Math.abs(acc.y) > 2 || Math.abs(acc.z) > 2) {
+            isMoving = true;
+            document.getElementById("motionStatus").textContent = "移動中";
+        } else {
+            isMoving = false;
+            document.getElementById("motionStatus").textContent = "靜止";
+        }
+
+        console.log("行動狀態：", isMoving ? "移動中" : "靜止");
+    });
+} else {
+    document.getElementById("motionStatus").textContent = "不支援感測器";
+}
+
+/* ===============================
+   即時通訊：送出訊息
+   =============================== */
+function sendMessage() {
+    let text = document.getElementById("msgInput").value;
+    if (text === "") return;
+
+    addMessage("me", text);
+    document.getElementById("msgInput").value = "";
+
+    // 模擬通訊延遲
+    setTimeout(() => {
+        sendToServer(text);
+    }, 1000);
+}
+
+/* ===============================
+   顯示訊息
+   =============================== */
+function addMessage(sender, text) {
+    let box = document.getElementById("chatbox");
+    let div = document.createElement("div");
+    div.className = sender;
+    div.innerHTML = "<span>" + text + "</span>";
+    box.appendChild(div);
+
+    chatHistory.push({
+        sender: sender,
+        message: text,
+        moving: isMoving
+    });
+
+    box.scrollTop = box.scrollHeight;
+    console.log("聊天紀錄：", chatHistory);
+}
+
+/* ===============================
+   Fetch API（通訊）
+   =============================== */
+function sendToServer(message) {
+    let data = {
+        msg: message,
+        mobileStatus: isMoving ? "移動中" : "靜止"
+    };
+
+    fetch("https://httpbin.org/post", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        console.log("伺服器回傳：", result);
+        addMessage("bot", "訊息已送出（模擬回覆）");
+    })
+    .catch(error => {
+        console.log("傳送失敗", error);
+    });
+}
+</script>
+
+</body>
+</html>
