@@ -12,15 +12,15 @@
     .box { background: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
     #chatBox { height: 220px; overflow-y: auto; background: #fff; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
     .msg { margin-bottom: 6px; }
-    .me { color: #333; }
-    .other { color: #0b5ed7; }
-    .system { color: #d63384; font-style: italic; }
+    .me { color: #333; font-weight: bold; }        /* 我 */
+    .other { color: #0b5ed7; font-weight: bold; } /* 對方 */
+    .system { color: #d63384; font-style: italic; }/* 系統 */
     input { width: 70%; padding: 8px; font-size: 16px; }
   </style>
 </head>
 <body>
 
-<h2>📱 行動 × 通訊 即時聊天模擬</h2>
+<h2>📱 行動即時通訊狀態模擬系統</h2>
 
 <button onclick="requestMotionPermission()">啟用行動偵測</button>
 
@@ -77,20 +77,21 @@ function startDetectMotion() {
   });
 }
 
-/* ========= 聊天功能 ========= */
+/* ========= 使用者聊天 (顯示為我) ========= */
 function sendChat() {
   let input = document.getElementById("chatInput");
   let text = input.value.trim();
   if (text === "") return;
 
-  addChatMessage("對方", text, "other");
+  addChatMessage("我", text, "me");   // 使用者輸入訊息顯示為我
   sendToServer("chat", text);
   input.value = "";
 
-  // 模擬對方回覆
+  // 模擬回覆顯示為對方
   simulateReply();
 }
 
+/* ========= 顯示訊息 ========= */
 function addChatMessage(user, text, cssClass) {
   let chatBox = document.getElementById("chatBox");
   let div = document.createElement("div");
@@ -118,7 +119,7 @@ function simulateReply() {
   let replyText = replyList[Math.floor(Math.random() * replyList.length)];
 
   setTimeout(() => {
-    addChatMessage("我", replyText, "me");
+    addChatMessage("對方", replyText, "other"); // 模擬回覆顯示為對方
   }, 1000 + Math.random() * 1000);
 }
 
