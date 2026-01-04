@@ -6,35 +6,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f4f6f8;
-    }
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f4f6f8; }
     h2 { margin-bottom: 10px; }
     button { padding: 8px 14px; font-size: 16px; }
-    .box {
-      background: white;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 10px;
-    }
-    #chatBox {
-      height: 220px;
-      overflow-y: auto;
-      background: #fff;
-      border-radius: 8px;
-      padding: 10px;
-      margin-bottom: 10px;
-    }
+    .box { background: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
+    #chatBox { height: 220px; overflow-y: auto; background: #fff; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
     .msg { margin-bottom: 6px; }
     .me { color: #333; }
     .other { color: #0b5ed7; }
-    input {
-      width: 70%;
-      padding: 8px;
-      font-size: 16px;
-    }
+    .system { color: #d63384; font-style: italic; }
+    input { width: 70%; padding: 8px; font-size: 16px; }
   </style>
 </head>
 <body>
@@ -43,11 +24,8 @@
 
 <button onclick="requestMotionPermission()">啟用行動偵測</button>
 
-<div class="box">
-  行動狀態：<strong id="motionStatus">尚未啟用</strong>
-</div>
-
-
+<div class="box">行動狀態：<strong id="motionStatus">尚未啟用</strong></div>
+<div class="box">通訊狀態：<strong id="commStatus">尚未傳送</strong></div>
 
 <div id="chatBox"></div>
 
@@ -55,127 +33,110 @@
 <button onclick="sendChat()">送出</button>
 
 <script>
-  let lastMoveTime = 0;
-  let motionState = "尚未啟用";
+let lastMoveTime = 0;
+let motionState = "尚未啟用";
 
-  /* ========= 行動狀態偵測 ========= */
-
-  function requestMotionPermission() {
-    if (
-      typeof DeviceMotionEvent !== "undefined" &&
-      typeof DeviceMotionEvent.requestPermission === "function"
-    ) {
-      DeviceMotionEvent.requestPermission().then(result => {
-        if (result === "granted") startDetectMotion();
-        else alert("未取得感測器權限");
-      });
-    } else {
-      startDetectMotion();
-    }
-  }
-
-  function startDetectMotion() {
-    window.addEventListener("devicemotion", event => {
-      let acc = event.accelerationIncludingGravity;
-      if (!acc) return;
-
-      let total =
-        Math.abs(acc.x) +
-        Math.abs(acc.y) +
-        Math.abs(acc.z);
-
-      let newState = motionState;
-
-      if (total > 20) {
-        lastMoveTime = Date.now();
-        newState = "移動中";
-      } else if (Date.now() - lastMoveTime > 2000) {
-        newState = "靜止中";
-      }
-
-      if (newState !== motionState) {
-        motionState = newState;
-        document.getElementById("motionStatus").textContent = motionState;
-        sendToServer("statusChange", "");
-      }
+/* ========= 行動狀態偵測 ========= */
+function requestMotionPermission() {
+  if (typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function") {
+    DeviceMotionEvent.requestPermission().then(result => {
+      if (result === "granted") startDetectMotion();
+      else alert("未取得感測器權限");
     });
+  } else {
+    startDetectMotion();
   }
+}
 
-  /* ========= 聊天功能 ========= */
+function startDetectMotion() {
+  window.addEventListener("devicemotion", event => {
+    let acc = event.accelerationIncludingGravity;
+    if (!acc) return;
 
-  function sendChat() {
-    let input = document.getElementById("chatInput");
-    let text = input.value.trim();
-    if (text === "") return;
+    let total = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z);
+    let newState = motionState;
 
-    addChatMessage("對方", text, "other");
-    sendToServer("chat", text);
-    input.value = "";
+    if (total > 20) {
+      lastMoveTime = Date.now();
+      newState = "移動中";
+    } else if (Date.now() - lastMoveTime > 2000) {
+      newState = "靜止中";
+    }
 
-    // 模擬對方回覆
-    simulateReply();
-  }
+    if (newState !== motionState) {
+      motionState = newState;
+      document.getElementById("motionStatus").textContent = motionState;
 
-  function addChatMessage(user, text, cssClass) {
-    let chatBox = document.getElementById("chatBox");
-    let div = document.createElement("div");
-    div.className = `msg ${cssClass}`;
-    div.textContent = `${user}：${text}`;
-    chatBox.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
+      // 系統訊息回覆
+      if (motionState === "移動中") {
+        addSystemMessage("系統：移動中，稍後回復");
+      }
 
-  /* ========= 模擬回覆（重點） ========= */
+      sendToServer("statusChange", "");
+    }
+  });
+}
 
-  function simulateReply() {
-    let repliesMoving = [
-      "移動中，稍後回復",
-    ];
+/* ========= 聊天功能 ========= */
+function sendChat() {
+  let input = document.getElementById("chatInput");
+  let text = input.value.trim();
+  if (text === "") return;
 
-    let repliesStatic = [
-      "好的",
-      
-    ];
+  addChatMessage("我", text, "me");
+  sendToServer("chat", text);
+  input.value = "";
 
-    let replyList =
-      motionState === "移動中" ? repliesMoving : repliesStatic;
+  // 模擬對方回覆
+  simulateReply();
+}
 
-    let replyText =
-      replyList[Math.floor(Math.random() * replyList.length)];
+function addChatMessage(user, text, cssClass) {
+  let chatBox = document.getElementById("chatBox");
+  let div = document.createElement("div");
+  div.className = `msg ${cssClass}`;
+  div.textContent = `${user}：${text}`;
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
 
-    // 模擬伺服器延遲 1~2 秒
-    setTimeout(() => {
-      addChatMessage("我", replyText, "me");
-    }, 1000 + Math.random() * 1000);
-  }
+function addSystemMessage(text) {
+  let chatBox = document.getElementById("chatBox");
+  let div = document.createElement("div");
+  div.className = "msg system";
+  div.textContent = text;
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
 
-  /* ========= Fetch API 通訊 ========= */
+/* ========= 模擬對方回覆 ========= */
+function simulateReply() {
+  let repliesMoving = ["移動中，稍後回復"];
+  let repliesStatic = ["好的", "收到", "了解"];
 
-  function sendToServer(type, message) {
-    document.getElementById("commStatus").textContent = "傳送中...";
+  let replyList = motionState === "移動中" ? repliesMoving : repliesStatic;
+  let replyText = replyList[Math.floor(Math.random() * replyList.length)];
 
-    let data = {
-      type: type,
-      motionState: motionState,
-      message: message,
-      time: new Date().toLocaleTimeString()
-    };
+  setTimeout(() => {
+    addChatMessage("對方", replyText, "other");
+  }, 1000 + Math.random() * 1000);
+}
 
-    console.log("送出資料：", data);
+/* ========= Fetch API 通訊 ========= */
+function sendToServer(type, message) {
+  document.getElementById("commStatus").textContent = "傳送中...";
+  let data = { type: type, motionState: motionState, message: message, time: new Date().toLocaleTimeString() };
+  console.log("送出資料：", data);
 
-    fetch("https://httpbin.org/post", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
-    })
-      .then(res => res.json())
-      .then(() => {
-        document.getElementById("commStatus").textContent = "已送出";
-      })
-      .catch(() => {
-        document.getElementById("commStatus").textContent = "傳送失敗";
-      });
-  }
+  fetch("https://httpbin.org/post", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  })
+  .then(res => res.json())
+  .then(() => { document.getElementById("commStatus").textContent = "已送出"; })
+  .catch(() => { document.getElementById("commStatus").textContent = "傳送失敗"; });
+}
 </script>
 
 </body>
