@@ -11,13 +11,8 @@
       padding: 20px;
       background: #f4f6f8;
     }
-    h2 {
-      margin-bottom: 10px;
-    }
-    button {
-      padding: 8px 14px;
-      font-size: 16px;
-    }
+    h2 { margin-bottom: 10px; }
+    button { padding: 8px 14px; font-size: 16px; }
     .box {
       background: white;
       padding: 12px;
@@ -25,16 +20,16 @@
       margin-bottom: 10px;
     }
     #chatBox {
-      height: 200px;
+      height: 220px;
       overflow-y: auto;
       background: #fff;
       border-radius: 8px;
       padding: 10px;
       margin-bottom: 10px;
     }
-    .msg {
-      margin-bottom: 6px;
-    }
+    .msg { margin-bottom: 6px; }
+    .me { color: #333; }
+    .other { color: #0b5ed7; }
     input {
       width: 70%;
       padding: 8px;
@@ -65,26 +60,22 @@
   let lastMoveTime = 0;
   let motionState = "尚未啟用";
 
-  // 請求感測器權限
+  /* ========= 行動狀態偵測 ========= */
+
   function requestMotionPermission() {
     if (
       typeof DeviceMotionEvent !== "undefined" &&
       typeof DeviceMotionEvent.requestPermission === "function"
     ) {
-      DeviceMotionEvent.requestPermission()
-        .then(result => {
-          if (result === "granted") {
-            startDetectMotion();
-          } else {
-            alert("未取得感測器權限");
-          }
-        });
+      DeviceMotionEvent.requestPermission().then(result => {
+        if (result === "granted") startDetectMotion();
+        else alert("未取得感測器權限");
+      });
     } else {
       startDetectMotion();
     }
   }
 
-  // 偵測行動狀態
   function startDetectMotion() {
     window.addEventListener("devicemotion", event => {
       let acc = event.accelerationIncludingGravity;
@@ -109,33 +100,62 @@
         document.getElementById("motionStatus").textContent = motionState;
         sendToServer("statusChange", "");
       }
-
-      console.log("加速度：", total);
     });
   }
 
-  // 送出聊天訊息
+  /* ========= 聊天功能 ========= */
+
   function sendChat() {
     let input = document.getElementById("chatInput");
     let text = input.value.trim();
     if (text === "") return;
 
-    addChatMessage("我", text);
+    addChatMessage("我", text, "me");
     sendToServer("chat", text);
     input.value = "";
+
+    // 模擬對方回覆
+    simulateReply();
   }
 
-  // 顯示聊天訊息
-  function addChatMessage(user, text) {
+  function addChatMessage(user, text, cssClass) {
     let chatBox = document.getElementById("chatBox");
     let div = document.createElement("div");
-    div.className = "msg";
+    div.className = `msg ${cssClass}`;
     div.textContent = `${user}：${text}`;
     chatBox.appendChild(div);
     chatBox.scrollTop = chatBox.scrollHeight;
   }
 
-  // Fetch API：送出行動狀態 + 聊天訊息
+  /* ========= 模擬回覆（重點） ========= */
+
+  function simulateReply() {
+    let repliesMoving = [
+      "我看你在移動中，等等再回你 👍",
+      "你是不是在外面？注意安全",
+      "OK，你方便再回就好"
+    ];
+
+    let repliesStatic = [
+      "好，我了解",
+      "沒問題 👍",
+      "等一下我們再聊"
+    ];
+
+    let replyList =
+      motionState === "移動中" ? repliesMoving : repliesStatic;
+
+    let replyText =
+      replyList[Math.floor(Math.random() * replyList.length)];
+
+    // 模擬伺服器延遲 1~2 秒
+    setTimeout(() => {
+      addChatMessage("對方", replyText, "other");
+    }, 1000 + Math.random() * 1000);
+  }
+
+  /* ========= Fetch API 通訊 ========= */
+
   function sendToServer(type, message) {
     document.getElementById("commStatus").textContent = "傳送中...";
 
@@ -150,9 +170,7 @@
 
     fetch("https://httpbin.org/post", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data)
     })
       .then(res => res.json())
