@@ -110,7 +110,7 @@
     let text = input.value.trim();
     if (text === "") return;
 
-    addChatMessage("我", text, "me");
+    addChatMessage("對方", text, "other");
     sendToServer("chat", text);
     input.value = "";
 
@@ -131,15 +131,12 @@
 
   function simulateReply() {
     let repliesMoving = [
-      "我看你在移動中，等等再回你 👍",
-      "你是不是在外面？注意安全",
-      "OK，你方便再回就好"
+      "移動中，稍後回復",
     ];
 
     let repliesStatic = [
-      "好，我了解",
-      "沒問題 👍",
-      "等一下我們再聊"
+      "好的",
+      
     ];
 
     let replyList =
@@ -150,7 +147,7 @@
 
     // 模擬伺服器延遲 1~2 秒
     setTimeout(() => {
-      addChatMessage("對方", replyText, "other");
+      addChatMessage("我", replyText, "me");
     }, 1000 + Math.random() * 1000);
   }
 
