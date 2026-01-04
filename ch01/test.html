@@ -83,7 +83,7 @@ function sendChat() {
   let text = input.value.trim();
   if (text === "") return;
 
-  addChatMessage("我", text, "me");
+  addChatMessage("對方", text, "other");
   sendToServer("chat", text);
   input.value = "";
 
@@ -112,13 +112,13 @@ function addSystemMessage(text) {
 /* ========= 模擬對方回覆 ========= */
 function simulateReply() {
   let repliesMoving = ["移動中，稍後回復"];
-  let repliesStatic = ["好的", "收到", "了解"];
+  let repliesStatic = ["好的"];
 
   let replyList = motionState === "移動中" ? repliesMoving : repliesStatic;
   let replyText = replyList[Math.floor(Math.random() * replyList.length)];
 
   setTimeout(() => {
-    addChatMessage("對方", replyText, "other");
+    addChatMessage("我", replyText, "me");
   }, 1000 + Math.random() * 1000);
 }
 
